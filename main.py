@@ -34,13 +34,13 @@ def main():
 
         # check if game over
         if game.game_over_check():
-            running = False
+            break
 
         # update display
         py.display.update()
 
-        # 5 ticks per second
-        clock.tick(5)
+        # 10 ticks per second
+        clock.tick(10)
 
     # close pygame
     py.quit()
