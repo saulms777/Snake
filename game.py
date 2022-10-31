@@ -21,32 +21,41 @@ class Game(py.sprite.Sprite, Constants):
         # create screen object
         self.screen = py.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
 
-        # create head object
-        self.head = py.Surface((25, 25))
-        self.head.fill(self.HEAD_GREEN)
+        # create background objects
+        self.border = py.Surface((self.SIZE, self.SIZE))
+        self.border.fill(self.BORDER_GREEN)
+        self.light = py.Surface((self.SIZE, self.SIZE))
+        self.light.fill(self.LIGHT_GREEN)
+        self.dark = py.Surface((self.SIZE, self.SIZE))
+        self.dark.fill(self.DARK_GREEN)
 
-        # create body segment object
-        self.segment = py.Surface((25, 25))
-        self.segment.fill(self.BODY_GREEN)
-
-        # create apple object
-        self.apple = py.Surface((25, 25))
-        self.apple.fill(self.APPLE_RED)
-
-        # create snake
+        # set snake default position
+        middle_x: int = int(self.SCREEN_WIDTH / self.SIZE // 2) * self.SIZE
+        middle_y: int = self.TITLE_HEIGHT + int((self.SCREEN_HEIGHT - self.TITLE_HEIGHT) / self.SIZE // 2) * self.SIZE
         self.snake: list[list] = [
-            [350, 400],
-            [325, 400],
-            [300, 400],
-            [275, 400],
-            [250, 400]
+            [middle_x + 2 * self.SIZE, middle_y],
+            [middle_x + self.SIZE, middle_y],
+            [middle_x, middle_y],
+            [middle_x - self.SIZE, middle_y],
+            [middle_x - 2 * self.SIZE, middle_y]
         ]
 
-        # set default direction
-        self.direction: tuple[int, int] = (25, 0)
+        # create snake objects
+        self.head = py.Surface((self.SIZE, self.SIZE))
+        self.head.fill(self.HEAD_BLUE)
+        self.segment = py.Surface((self.SIZE, self.SIZE))
+        self.segment.fill(self.BODY_BLUE)
 
-        # apple values
+        # create apple object
         self.apple_coords: list[int, int] = self.generate_apple()
+        self.apple = py.Surface((self.SIZE, self.SIZE))
+        self.apple.fill(self.APPLE_RED)
+
+        # set default direction
+        self.direction: tuple[int, int] = (self.SIZE, 0)
+
+        # points
+        self.points = 0
 
     # generate new apple coords
     def generate_apple(self) -> list[int, int]:
@@ -55,7 +64,7 @@ class Game(py.sprite.Sprite, Constants):
         apple_x: int = 0
         loop = True
         while loop:
-            apple_x = randrange(0, self.SCREEN_WIDTH, 25)
+            apple_x = randrange(self.SIZE, self.SCREEN_WIDTH - self.SIZE, self.SIZE)
             if apple_x not in [el[0] for el in self.snake]:
                 loop = False
 
@@ -63,7 +72,7 @@ class Game(py.sprite.Sprite, Constants):
         apple_y: int = 0
         loop = True
         while loop:
-            apple_y = randrange(0, self.SCREEN_HEIGHT, 25)
+            apple_y = randrange(self.TITLE_HEIGHT + self.SIZE, self.SCREEN_HEIGHT - self.SIZE, self.SIZE)
             if apple_y not in [el[1] for el in self.snake]:
                 loop = False
 
@@ -71,20 +80,45 @@ class Game(py.sprite.Sprite, Constants):
 
     # update display
     def update(self, pressed_keys) -> None:
-
-        # set bg to white
-        self.screen.fill((255, 255, 255))
+        # keys and directions
+        key_directions: dict[int, tuple[int, int]] = {
+            K_UP: (0, -self.SIZE),
+            K_DOWN: (0, self.SIZE),
+            K_LEFT: (-self.SIZE, 0),
+            K_RIGHT: (self.SIZE, 0)
+        }
 
         # change direction if key pressed
-        key_directions: dict[int, tuple[int, int]] = {
-            K_UP: (0, -25),
-            K_DOWN: (0, 25),
-            K_LEFT: (-25, 0),
-            K_RIGHT: (25, 0)
-        }
-        for key in key_directions:
+        for key, instruction in key_directions.items():
             if pressed_keys[key]:
-                self.direction = key_directions[key]
+
+                # check if input is not opposite direction
+                if not (abs(instruction[0]) == abs(self.direction[0])
+                        or abs(instruction[1]) == abs(self.direction[1])):
+                    self.direction = key_directions[key]
+
+        # draw background
+        self.screen.fill(self.WHITE)
+        game_height: int = int((self.SCREEN_HEIGHT - self.TITLE_HEIGHT) / self.SIZE)
+        game_width: int = int(self.SCREEN_WIDTH / self.SIZE)
+        for column in range(game_height):
+            for row in range(game_width):
+                if row in (0, game_width - 1) or column in (0, game_height - 1):
+                    self.screen.blit(self.border, (self.SIZE * row, self.TITLE_HEIGHT + self.SIZE * column))
+        for column in range(game_height - 2):
+            for row in range(game_width - 2):
+                if (row + column) % 2 == 0:
+                    self.screen.blit(self.dark,
+                                     (self.SIZE + self.SIZE * row,
+                                      self.TITLE_HEIGHT + self.SIZE + self.SIZE * column)
+                                     )
+                else:
+                    self.screen.blit(self.light,
+                                     (self.SIZE + self.SIZE * row,
+                                      self.TITLE_HEIGHT + self.SIZE + self.SIZE * column)
+                                     )
+
+        # draw points
 
         # draw snake head
         old_position: list[int, int] = self.snake[0]
@@ -94,6 +128,7 @@ class Game(py.sprite.Sprite, Constants):
         # check if apple was eaten
         if self.snake[0] == self.apple_coords:
             self.apple_coords = self.generate_apple()
+            self.points += 1
         else:
             self.snake.pop()
 
@@ -112,7 +147,8 @@ class Game(py.sprite.Sprite, Constants):
 
             # check if hit a wall
             head_coords: list[int, int] = self.snake[0]
-            if 0 < head_coords[0] < self.SCREEN_WIDTH and 0 < head_coords[1] < self.SCREEN_HEIGHT:
+            if self.SIZE <= head_coords[0] <= self.SCREEN_WIDTH - 2 * self.SIZE \
+                    and self.TITLE_HEIGHT + self.SIZE <= head_coords[1] <= self.SCREEN_HEIGHT - 2 * self.SIZE:
                 return False
 
         return True
