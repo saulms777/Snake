@@ -3,6 +3,8 @@ class Constants:
     SCREEN_HEIGHT: int = 800
     TITLE_HEIGHT: int = 100
     SIZE: int = 25
+    TICKS: int = 10
+
     BORDER_GREEN: tuple[int, int, int] = (0, 153, 0)
     DARK_GREEN: tuple[int, int, int] = (128, 255, 0)
     LIGHT_GREEN: tuple[int, int, int] = (153, 255, 51)
