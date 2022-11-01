@@ -1,9 +1,6 @@
 # imports
 import pygame as py
-from pygame.locals import (
-    K_ESCAPE,
-    KEYDOWN
-)
+from pygame.locals import (K_ESCAPE, KEYDOWN)
 from game import Game
 
 
@@ -11,6 +8,7 @@ from game import Game
 def main():
     # initalize pygame
     py.init()
+    py.display.set_caption("Snake")
 
     # create clock object
     clock = py.time.Clock()
@@ -39,8 +37,8 @@ def main():
         # update display
         py.display.update()
 
-        # 10 ticks per second
-        clock.tick(10)
+        # ticks per second
+        clock.tick(game.TICKS)
 
     # close pygame
     py.quit()
