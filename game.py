@@ -1,6 +1,10 @@
 # imports
 import pygame as py
 from pygame.locals import (
+    K_w,
+    K_s,
+    K_a,
+    K_d,
     K_UP,
     K_DOWN,
     K_LEFT,
@@ -82,6 +86,10 @@ class Game(py.sprite.Sprite, Constants):
     def update(self, pressed_keys) -> None:
         # keys and directions
         key_directions: dict[int, tuple[int, int]] = {
+            K_w: (0, -self.SIZE),
+            K_s: (0, self.SIZE),
+            K_a: (-self.SIZE, 0),
+            K_d: (self.SIZE, 0),
             K_UP: (0, -self.SIZE),
             K_DOWN: (0, self.SIZE),
             K_LEFT: (-self.SIZE, 0),
@@ -99,26 +107,26 @@ class Game(py.sprite.Sprite, Constants):
 
         # draw background
         self.screen.fill(self.WHITE)
+
+        # draw border
         game_height: int = int((self.SCREEN_HEIGHT - self.TITLE_HEIGHT) / self.SIZE)
         game_width: int = int(self.SCREEN_WIDTH / self.SIZE)
         for column in range(game_height):
             for row in range(game_width):
                 if row in (0, game_width - 1) or column in (0, game_height - 1):
                     self.screen.blit(self.border, (self.SIZE * row, self.TITLE_HEIGHT + self.SIZE * column))
+
+        # draw checkerboard pattern
         for column in range(game_height - 2):
             for row in range(game_width - 2):
                 if (row + column) % 2 == 0:
                     self.screen.blit(self.dark,
                                      (self.SIZE + self.SIZE * row,
-                                      self.TITLE_HEIGHT + self.SIZE + self.SIZE * column)
-                                     )
+                                      self.TITLE_HEIGHT + self.SIZE + self.SIZE * column))
                 else:
                     self.screen.blit(self.light,
                                      (self.SIZE + self.SIZE * row,
-                                      self.TITLE_HEIGHT + self.SIZE + self.SIZE * column)
-                                     )
-
-        # draw points
+                                      self.TITLE_HEIGHT + self.SIZE + self.SIZE * column))
 
         # draw snake head
         old_position: list[int, int] = self.snake[0]
