@@ -35,9 +35,6 @@ def main():
             if event.type == py.QUIT:
                 running = False
 
-        
-        py.display.update()
-
         # check if game over
         if not game.update(py.key.get_pressed()):
             over = True
@@ -73,6 +70,7 @@ def main():
                         inputted = True
                         greater = True
 
+                #display game over info
                 game.screen.fill((255,255,255))
                 overtext = my_font.render('Game Over! You ate {apples} apples!'.format(apples=game.score), 1, (0,0,0))
                 rstext = my_font.render('To restart, press R', 1, (0,0,0))
@@ -83,7 +81,7 @@ def main():
                 game.screen.blit(overtext, (game.SCREEN_WIDTH // 6, game.SCREEN_HEIGHT // 3))
                 game.screen.blit(rstext, (game.SCREEN_WIDTH // 4, game.SCREEN_HEIGHT//2.5))
 
-                # check for game events and text input
+                # check for game events
                 for event in py.event.get():
                     if event.type == py.QUIT:
                         py.quit()
