@@ -28,11 +28,8 @@ def main():
                 running = False
 
         # update game
-        game.update(py.key.get_pressed())
-
-        # check if game over
-        if game.game_over_check():
-            break
+        if not game.game_over:
+            game.update(py.key.get_pressed())
 
         # update display
         py.display.update()
