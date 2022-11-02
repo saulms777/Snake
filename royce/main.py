@@ -36,7 +36,8 @@ def main():
                 running = False
 
         # check if game over
-        if not game.update(py.key.get_pressed()):
+        over_check, over_reason = game.update(py.key.get_pressed())
+        if not over_check:
             over = True
             inputted = False
             greater = False
@@ -45,7 +46,7 @@ def main():
             # display game over screen
             while over:
                 while anim_over:
-                    game.game_over_anim(anim)
+                    game.game_over_anim(anim, over_reason)
                     if anim == 20:
                         anim_over = False
                     anim += 1
