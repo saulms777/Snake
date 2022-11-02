@@ -96,7 +96,7 @@ class Game(Constants):
         return True
 
     # update display
-    def update(self, pressed_keys) -> None:
+    def update_screen(self, pressed_keys) -> None:
 
         # keys and directions
         key_directions: dict[int, tuple[int, int]] = {
@@ -124,45 +124,53 @@ class Game(Constants):
                                         self.snake[0][1] + self.direction[1]]
         if self.game_over_check(new_position):
             self.game_over = True
+            return
+
+        # draw background
+        self.screen.fill(self.WHITE)
+
+        # draw border
+        game_height: int = int((self.SCREEN_HEIGHT - self.TITLE_HEIGHT) / self.SIZE)
+        game_width: int = int(self.SCREEN_WIDTH / self.SIZE)
+        for column in range(game_height):
+            for row in range(game_width):
+                if row in (0, game_width - 1) or column in (0, game_height - 1):
+                    self.screen.blit(self.border, (self.SIZE * row, self.TITLE_HEIGHT + self.SIZE * column))
+
+        # draw checkerboard pattern
+        for column in range(game_height - 2):
+            for row in range(game_width - 2):
+                if (row + column) % 2 == 0:
+                    self.screen.blit(self.dark,
+                                     (self.SIZE + self.SIZE * row,
+                                      self.TITLE_HEIGHT + self.SIZE + self.SIZE * column))
+                else:
+                    self.screen.blit(self.light,
+                                     (self.SIZE + self.SIZE * row,
+                                      self.TITLE_HEIGHT + self.SIZE + self.SIZE * column))
+
+        # draw snake head
+        self.snake.insert(0, new_position)
+        self.screen.blit(self.head, self.snake[0])
+
+        # check if apple was eaten
+        if new_position == self.apple_coords:
+            self.apple_coords = self.generate_apple()
+            self.points += 1
         else:
+            self.snake.pop()
 
-            # draw background
-            self.screen.fill(self.WHITE)
+        # draw body segments
+        for segment in self.snake[1:]:
+            self.screen.blit(self.segment, segment)
 
-            # draw border
-            game_height: int = int((self.SCREEN_HEIGHT - self.TITLE_HEIGHT) / self.SIZE)
-            game_width: int = int(self.SCREEN_WIDTH / self.SIZE)
-            for column in range(game_height):
-                for row in range(game_width):
-                    if row in (0, game_width - 1) or column in (0, game_height - 1):
-                        self.screen.blit(self.border, (self.SIZE * row, self.TITLE_HEIGHT + self.SIZE * column))
+        # draw apple
+        self.screen.blit(self.apple, self.apple_coords)
 
-            # draw checkerboard pattern
-            for column in range(game_height - 2):
-                for row in range(game_width - 2):
-                    if (row + column) % 2 == 0:
-                        self.screen.blit(self.dark,
-                                         (self.SIZE + self.SIZE * row,
-                                          self.TITLE_HEIGHT + self.SIZE + self.SIZE * column))
-                    else:
-                        self.screen.blit(self.light,
-                                         (self.SIZE + self.SIZE * row,
-                                          self.TITLE_HEIGHT + self.SIZE + self.SIZE * column))
+    # end screen
+    def draw_end_screen(self) -> None:
 
-            # draw snake head
-            self.snake.insert(0, new_position)
-            self.screen.blit(self.head, self.snake[0])
-
-            # check if apple was eaten
-            if self.snake[0] == self.apple_coords:
-                self.apple_coords = self.generate_apple()
-                self.points += 1
-            else:
-                self.snake.pop()
-
-            # draw body segments
-            for segment in self.snake[1:]:
-                self.screen.blit(self.segment, segment)
-
-            # draw apple
-            self.screen.blit(self.apple, self.apple_coords)
+        # darken screen
+        end_screen = py.Surface.convert_alpha(py.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT)))
+        end_screen.fill(self.DARKEN)
+        self.screen.blit(end_screen, (0, 0))
