@@ -53,12 +53,12 @@ class Game(Constants):
         # set default direction
         self.direction: tuple[int, int] = (25, 0)
 
-        # portal values
+        # portal objects and values
         self.portal_o = Portal('orange')
-        self.portal_o_coords = self.portal_o.generate_portal(self.snake)
+        self.portal_o_coords: list[int, int] = self.portal_o.generate_portal(self.snake)
 
         self.portal_b = Portal('blue')
-        self.portal_b_coords = self.portal_b.generate_portal(self.snake)
+        self.portal_b_coords: list[int, int] = self.portal_b.generate_portal(self.snake)
 
         # apple values
         self.apple_coords: list[int, int] = self.generate_apple()
@@ -99,21 +99,19 @@ class Game(Constants):
                 K_LEFT: (-25, 0),
                 K_RIGHT: (25, 0)
             }
+
+            # update directions based on key press
             for key in key_directions:
                 if pressed_keys[key]:
+                    # do not change direction if the new direction is opposite to the old one
                     if ((0 - int(key_directions[key][0])) == self.direction[0]) or ((0 - int(key_directions[key][1])) == self.direction[1]):
                         pass
-
-                    #elif self.portal_o_coords in self.snake or self.portal_b_coords in self.snake:
-                        #pass
 
                     else:
                         self.direction = key_directions[key]
 
             # draw background
             self.screen.fill((255,255,255))
-
-
 
             # draw border
             game_height: int = int(self.SCREEN_HEIGHT - 100) // 25
@@ -133,18 +131,18 @@ class Game(Constants):
                     else:
                         self.screen.blit(self.light, (25 + 25 * row, 100 + 25 * column))
 
+            # draw the portals onto the screen
             self.screen.blit(self.portal_o.portal, self.portal_o_coords)
             self.screen.blit(self.portal_b.portal, self.portal_b_coords)
 
-            # check if the new snake is out of the bounds
-
+            # move the snake if it is touching a portal
             for i, el in enumerate(self.snake):
                 if el == self.portal_o_coords:
                     self.snake[i] = self.portal_b_coords
                 elif el == self.portal_b_coords:
                     self.snake[i] = self.portal_o_coords
 
-
+            # check if the moved snake will be out of bounds
             new_position = [self.snake[0][0] + self.direction[0], self.snake[0][1] + self.direction[1]]
 
             if (new_position[0] <= 0) or (new_position[0] >= self.SCREEN_WIDTH - 25) or (new_position[1] <= 75) or (new_position[1] >= self.SCREEN_HEIGHT - 50):
@@ -154,7 +152,6 @@ class Game(Constants):
                 return False
 
             # draw the snake
-            
             else:
                 old_position: list[int, int] = self.snake[0]
                 self.snake.insert(0, [old_position[0] + self.direction[0], old_position[1] + self.direction[1]])
@@ -185,9 +182,11 @@ class Game(Constants):
         game_height: int = int(self.SCREEN_HEIGHT - 100) // 25
         game_width: int = int(self.SCREEN_WIDTH) // 25
 
+        # make the surfaces for the color change from blue to red
         self.death_head = py.Surface((25,25))
         self.death_body = py.Surface((25,25))
 
+        # if the snake has finished changing colors, set the fill of those surfaces to black
         try:
             self.death_head.fill(self.DEATH_COLORS_HEAD[iteration - 1])
             self.death_body.fill(self.DEATH_COLORS_BODY[iteration - 1])
@@ -195,6 +194,7 @@ class Game(Constants):
             self.death_head.fill((0, 0, 0))
             self.death_body.fill((0, 0, 0))
 
+        # make the surface for the exploded snake
         self.death = py.Surface((25,25))
         self.death.fill(self.DEATH_RED)
 
@@ -212,10 +212,11 @@ class Game(Constants):
                 else:
                     self.screen.blit(self.light, (25 + 25 * row, 100 + 25 * column))
                 
-
+        # for the first 8 frames, the snake only changes color
         if 1 <= iteration <= 8:
             pass
 
+        # explode the snake once, then move all pieces down for the duration of the animation
         else:
             for i, segment in enumerate(self.snake):
                 if iteration == 9:
@@ -234,7 +235,7 @@ class Game(Constants):
                 self.snake[i] = nsegment
 
 
-        
+        # color the snake depending on what phase of the animation it's in
         for n, segment in enumerate(self.snake):
             if 1 <= iteration <= 8:
                 if n == 0:
