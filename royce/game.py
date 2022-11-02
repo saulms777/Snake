@@ -216,9 +216,9 @@ class Game(Constants):
         if 1 <= iteration <= 8:
             pass
 
-        if iteration >= 9:
+        else:
             for i, segment in enumerate(self.snake):
-                if 9 <= iteration <= 10:
+                if iteration == 9:
                     seg_coords: list[int, int] = [segment[0], segment[1]]
                     nsegment: list[int, int, bool] = [segment[0] + randrange(-100, 100, 25), segment[1] + randrange(-100, 100, 25), True]
                     while not (25 <= nsegment[0] <= self.SCREEN_WIDTH - 50 and 125 <= nsegment[1] <= self.SCREEN_HEIGHT - 75):
