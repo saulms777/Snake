@@ -1,3 +1,4 @@
+# constants to be used by the game
 class Constants:
     SCREEN_WIDTH: int = 600
     SCREEN_HEIGHT: int = 800
