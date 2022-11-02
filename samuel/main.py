@@ -3,6 +3,8 @@ import pygame as py
 from pygame.locals import (K_ESCAPE, KEYDOWN)
 from game import Game
 
+from time import sleep
+
 
 # game code
 def main():
@@ -29,13 +31,19 @@ def main():
 
         # update game
         if not game.game_over:
-            game.update(py.key.get_pressed())
+            game.update_screen(py.key.get_pressed())
+        else:
+            running = False
 
         # update display
         py.display.update()
 
         # ticks per second
         clock.tick(game.TICKS)
+
+    game.draw_end_screen()
+    py.display.update()
+    sleep(5)
 
     # close pygame
     py.quit()
