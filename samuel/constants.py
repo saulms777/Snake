@@ -12,6 +12,7 @@ class Constants:
     LIGHT_GREEN: tuple[int, int, int] = (153, 255, 51)
     HEAD_BLUE: tuple[int, int, int] = (0, 128, 255)
     BODY_BLUE: tuple[int, int, int] = (51, 153, 255)
-    APPLE_RED: tuple[int, int, int] = (255, 153, 153)
+    APPLE_RED: tuple[int, int, int] = (255, 51, 51)
     WHITE: tuple[int, int, int] = (255, 255, 255)
+    BLACK: tuple[int, int, int] = (0, 0, 0)
     DARKEN: tuple[int, int, int, int] = (0, 0, 0, 128)
