@@ -12,6 +12,10 @@ class Constants:
     PORTAL_BLUE: tuple[int, int, int] = (0, 0, 255)
     BOMB_GRAY: tuple[int, int, int] = (128, 128, 128)
     HOLE_BLACK: tuple[int, int, int] = (0, 0, 0)
+    HEAD_WORKER: tuple[int, int, int] = (153, 153, 0)
+    BODY_WORKER: tuple[int, int, int] = (255, 255, 51)
+    HAMMER_BROWN: tuple[int, int, int] = (153, 0, 0)
+    BOOSTER_WHITE: tuple[int, int, int] = (255, 255, 255)
     DEATH_COLORS_HEAD: list[tuple[int, int, int]] = [(0, 153, 0), (76, 148, 0), (114, 141, 0), (146, 131, 0), 
                                                      (177, 117, 0), (206, 98, 0), (232, 70, 0), (255, 0, 0)]
     DEATH_COLORS_BODY: list[tuple[int, int, int]] = [(0, 204, 0), (101, 190, 0), (142, 174, 0), (174, 156, 0),
