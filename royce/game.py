@@ -8,14 +8,13 @@ from pygame.locals import (
 )
 from random import randrange
 from constants import Constants
-from portal import Portal
-from bomb import Bomb
-from holes import Hole
+from portal_utils import Portal
+from bomb_utils import Bomb, Hole, Hammer
 
 class Game(Constants):
 
     # initialize
-    def __init__(self) -> None:
+    def __init__(self, worker_status) -> None:
 
         # create screen object
         self.screen = py.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
@@ -27,6 +26,13 @@ class Game(Constants):
         # create body segment object
         self.segment = py.Surface((25, 25))
         self.segment.fill(self.BODY_BLUE)
+
+        # create construction costume
+        self.head_worker = py.Surface((25, 25))
+        self.head_worker.fill(self.HEAD_WORKER)
+
+        self.body_worker = py.Surface((25, 25))
+        self.body_worker.fill(self.BODY_WORKER)
 
         # create apple object
         self.apple = py.Surface((25, 25))
@@ -62,16 +68,23 @@ class Game(Constants):
         self.portal_b = Portal('blue')
         self.portal_b_coords: list[int, int] = self.portal_b.generate_portal(self.snake)
 
-        # bomb objects and values
-        self.bomb = Bomb()
-        self.bomb_coords:list[int, int] = self.bomb.generate_bomb(self.snake)
-
         # hole objects
         self.holes = [None]
-        self.hole_coords = [[[None, None], [None, None]]]
+        self.hole_coords = [[None, None]]
+
+        # hammer objects
+        self.hammer = None
+        self.hammer_coords = [None, None]
+
+        # temporarialy initialize bomb coordinates for use in apple generation
+        self.bomb_coords = [None, None]
 
         # apple values
         self.apple_coords: list[int, int] = self.generate_apple()
+
+        # bomb objects and values
+        self.bomb = Bomb()
+        self.bomb_coords: list[int, int] = self.bomb.generate_bomb(self.snake, self.hole_coords, [self.portal_o_coords, self.portal_b_coords], self.apple_coords, self.hammer_coords)
 
         # score
         self.score: int = 0
@@ -79,138 +92,176 @@ class Game(Constants):
         # snake speed
         self.speed: int = 10
 
+        # is the snake a construction worker
+        self.worker = worker_status
+
     # generate new apple coords
     def generate_apple(self) -> list[int, int]:
 
         # generate x value of apple
         apple_x: int = 0
-        loop = True
-        while loop:
-            apple_x = randrange(25, self.SCREEN_WIDTH - 50, 25)
-            if apple_x not in [el[0] for el in self.snake]:
-                if apple_x not in [self.portal_o_coords[0], self.portal_b_coords[0]]:
-                    if apple_x != self.bomb_coords[0]:
-                        if apple_x not in [hole[0][0] for hole in self.hole_coords]:
-                            loop = False
-
-        # generate y value of apple
         apple_y: int = 0
         loop = True
         while loop:
+            apple_x = randrange(25, self.SCREEN_WIDTH - 50, 25)
             apple_y = randrange(125, self.SCREEN_HEIGHT - 50, 25)
-            if apple_y not in [el[1] for el in self.snake]:
-                if apple_y not in [self.portal_o_coords[1], self.portal_b_coords[1]]:
-                    if apple_y != self.bomb_coords[1]:
-                        if apple_y not in [hole[0][1] for hole in self.hole_coords]:
-                            loop = False
+            if [apple_x, apple_y] not in [el for el in self.snake]:
+                if [apple_x, apple_y] not in [self.portal_o_coords, self.portal_b_coords]:
+                    if [apple_x, apple_y] != self.bomb_coords:
+                        if [apple_x, apple_y] not in [hole for hole in self.hole_coords]:
+                            if [apple_x, apple_y] != self.hammer_coords:
+                                loop = False
 
         return [apple_x, apple_y]
 
     # update display
-    def update(self, pressed_keys) -> None:
-            # change direction if key pressed
-            key_directions: dict[int, tuple[int, int]] = {
-                K_UP: (0, -25),
-                K_DOWN: (0, 25),
-                K_LEFT: (-25, 0),
-                K_RIGHT: (25, 0)
-            }
+    def update(self, pressed_keys, worker_status) -> None:
+        self.worker = worker_status
+        # change direction if key pressed
+        key_directions: dict[int, tuple[int, int]] = {
+            K_UP: (0, -25),
+            K_DOWN: (0, 25),
+            K_LEFT: (-25, 0),
+            K_RIGHT: (25, 0)
+        }
 
-            # update directions based on key press
-            for key in key_directions:
-                if pressed_keys[key]:
-                    # do not change direction if the new direction is opposite to the old one
-                    if ((0 - int(key_directions[key][0])) == self.direction[0]) or ((0 - int(key_directions[key][1])) == self.direction[1]):
-                        pass
+        # update directions based on key press
+        for key in key_directions:
+            if pressed_keys[key]:
+                # do not change direction if the new direction is opposite to the old one
+                if ((0 - int(key_directions[key][0])) == self.direction[0]) or ((0 - int(key_directions[key][1])) == self.direction[1]):
+                    pass
 
-                    else:
-                        self.direction = key_directions[key]
+                else:
+                    self.direction = key_directions[key]
 
-            # draw background
-            self.screen.fill((255,255,255))
+        # draw background
+        self.screen.fill((255,255,255))
 
-            # draw border
-            game_height: int = int(self.SCREEN_HEIGHT - 100) // 25
-            game_width: int = int(self.SCREEN_WIDTH) // 25
+        # draw border
+        game_height: int = int(self.SCREEN_HEIGHT - 100) // 25
+        game_width: int = int(self.SCREEN_WIDTH) // 25
 
-            for column in range(game_height):
-                for row in range(game_width):
-                    if row in (0, game_width - 1) or column in (0, game_height - 1):
-                        self.screen.blit(self.border, (25 * row, 75 + 25 * column))
+        for column in range(game_height):
+            for row in range(game_width):
+                if row in (0, game_width - 1) or column in (0, game_height - 1):
+                    self.screen.blit(self.border, (25 * row, 75 + 25 * column))
 
-            # draw checkerboard
-            for column in range(game_height - 2):
-                for row in range(game_width - 2):
-                    if (row + column) % 2 == 0:
-                        self.screen.blit(self.dark, (25 + 25 * row, 100 + 25 * column))
+        # draw checkerboard
+        for column in range(game_height - 2):
+            for row in range(game_width - 2):
+                if (row + column) % 2 == 0:
+                    self.screen.blit(self.dark, (25 + 25 * row, 100 + 25 * column))
 
-                    else:
-                        self.screen.blit(self.light, (25 + 25 * row, 100 + 25 * column))
+                else:
+                    self.screen.blit(self.light, (25 + 25 * row, 100 + 25 * column))
 
-            # draw the portals and bombs onto the screen
-            self.screen.blit(self.portal_o.portal, self.portal_o_coords)
-            self.screen.blit(self.portal_b.portal, self.portal_b_coords)
+        # draw the portals and bombs onto the screen
+        self.screen.blit(self.portal_o.portal, self.portal_o_coords)
+        self.screen.blit(self.portal_b.portal, self.portal_b_coords)
 
+        try:
+            self.screen.blit(self.bomb.bomb, self.bomb_coords)
+        except:
+            pass
+
+        # move the snake if it is touching a portal
+        for i, el in enumerate(self.snake):
+            if el == self.portal_o_coords:
+                self.snake[i] = self.portal_b_coords
+            elif el == self.portal_b_coords:
+                self.snake[i] = self.portal_o_coords
+
+        # check if the moved snake will be out of bounds
+        new_position: list[int, int] = [self.snake[0][0] + self.direction[0], self.snake[0][1] + self.direction[1]]
+
+        if (new_position[0] <= 0) or (new_position[0] >= self.SCREEN_WIDTH - 25) or (new_position[1] <= 75) or (new_position[1] >= self.SCREEN_HEIGHT - 50):
+            return False, 'wall', self.worker
+
+        # check if the snake ran over itself
+        elif len(self.snake) != len(set(map(tuple, self.snake))):
+            return False, 'self', self.worker
+
+        for m, hole in enumerate(self.hole_coords):
+            if new_position == hole:
+                if not self.worker:
+                    return False, 'hole', self.worker
+
+                elif self.worker:
+                    del self.holes[m]
+                    del self.hole_coords[m]
+
+                    if len(self.holes) != 1:
+                        self.hammer = Hammer()
+                        self.hammer_coords = self.hammer.generate_hammer(self.snake, self.hole_coords, [self.portal_b_coords, self.portal_b_coords], self.apple_coords, self.bomb_coords)
+
+                    return True, 'hammer', False
+
+        # if a snake hit a bomb, generate x holes and delete the bomb, run bomb animation by returning 'bomb'
+        if new_position == self.bomb_coords:
+
+            for x in range(5):
+                t_hole = Hole(25)
+                t_hole_coords = t_hole.generate_hole(self.snake, self.hole_coords, [self.portal_o_coords, self.portal_b_coords], self.apple_coords)
+                self.holes.append(t_hole)
+                self.hole_coords.append(t_hole_coords)
+            
+            self.bomb_coords = self.bomb.generate_bomb(self.snake, self.hole_coords, [self.portal_o_coords, self.portal_b_coords], self.apple_coords, self.hammer_coords)
+
+            if self.hammer == None:
+                self.hammer = Hammer()
+                self.hammer_coords = self.hammer.generate_hammer(self.snake, self.hole_coords, [self.portal_b_coords, self.portal_b_coords], self.apple_coords, self.bomb_coords)
+
+            return True, 'bomb', self.worker
+
+        elif new_position == self.hammer_coords:
+            del self.hammer
+            self.hammer_coords = [-500, -500]
+
+            return True, 'hammer', True
+
+        for i, hole in enumerate(self.hole_coords):
+            if hole[0] == None:
+                pass
+            else:
+                self.screen.blit(self.holes[i].hole, self.hole_coords[i])
+
+
+
+        # draw the snake
+        else:
             try:
-                self.screen.blit(self.bomb.bomb, self.bomb_coords)
+                self.screen.blit(self.hammer.hammer, self.hammer_coords)
             except:
                 pass
 
-            # move the snake if it is touching a portal
-            for i, el in enumerate(self.snake):
-                if el == self.portal_o_coords:
-                    self.snake[i] = self.portal_b_coords
-                elif el == self.portal_b_coords:
-                    self.snake[i] = self.portal_o_coords
+            old_position: list[int, int] = self.snake[0]
+            self.snake.insert(0, [old_position[0] + self.direction[0], old_position[1] + self.direction[1]])
 
-            # check if the moved snake will be out of bounds
-            new_position: list[int, int] = [self.snake[0][0] + self.direction[0], self.snake[0][1] + self.direction[1]]
-
-            if (new_position[0] <= 0) or (new_position[0] >= self.SCREEN_WIDTH - 25) or (new_position[1] <= 75) or (new_position[1] >= self.SCREEN_HEIGHT - 50):
-                return False, 'wall'
-
-            elif len(self.snake) != len(set(map(tuple, self.snake))):
-                return False, 'self'
-
-            elif new_position in [hole[0] for hole in self.hole_coords]:
-                return False, 'hole'
-
-            elif new_position[0] == self.bomb_coords[0] and new_position[1] == self.bomb_coords[1]:
-                for x in range(6):
-                    t_hole = Hole(25)
-                    t_hole_coords = t_hole.generate_hole(self.snake, self.hole_coords, [self.portal_o_coords, self.portal_b_coords])
-                    self.holes.append(t_hole)
-                    self.hole_coords.append(t_hole_coords)
-                del self.bomb
-
-            for i, hole in enumerate(self.hole_coords):
-                if hole[0][0] == None:
-                    pass
-                else:
-                    self.screen.blit(self.holes[i].hole, self.hole_coords[i][0])
-
-            # draw the snake
-            else:
-                old_position: list[int, int] = self.snake[0]
-                self.snake.insert(0, [old_position[0] + self.direction[0], old_position[1] + self.direction[1]])
+            if not self.worker:
                 self.screen.blit(self.head, self.snake[0])
+            elif self.worker:
+                self.screen.blit(self.head_worker, self.snake[0])
 
-                # check if apple was eaten
-                if self.snake[0] == self.apple_coords:
-                    self.apple_coords = self.generate_apple()
-                    self.score += 1
-                    self.speed += 0.5
-                else:
-                    self.snake.pop()
+            # check if apple was eaten
+            if self.snake[0] == self.apple_coords:
+                self.apple_coords = self.generate_apple()
+                self.score += 1
+            else:
+                self.snake.pop()
 
-                # draw body segments
-                for segment in self.snake[1:]:
+            # draw body segments
+            for segment in self.snake[1:]:
+                if not self.worker:
                     self.screen.blit(self.segment, segment)
 
-                # draw apple
-                self.screen.blit(self.apple, self.apple_coords)
+                elif self.worker:
+                    self.screen.blit(self.body_worker, segment)    
 
-                return True, None
+            # draw apple
+            self.screen.blit(self.apple, self.apple_coords)
+
+            return True, None, self.worker
 
     # snake death animation
     def game_over_anim(self, iteration, reason) -> None:
@@ -289,10 +340,10 @@ class Game(Constants):
         elif reason == 'hole':
 
             for i, hole in enumerate(self.hole_coords):
-                if hole[0][0] == None:
+                if hole[0] == None:
                     pass
                 else:
-                    self.screen.blit(self.holes[i].hole, self.hole_coords[i][0])
+                    self.screen.blit(self.holes[i].hole, self.hole_coords[i])
 
             try:
                 old_position: list[int, int] = self.snake[0]

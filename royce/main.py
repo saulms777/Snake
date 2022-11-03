@@ -21,8 +21,10 @@ def main():
     # create clock object
     clock = py.time.Clock()
 
+    worker_status = False
+
     # create game object
-    game = Game()
+    game = Game(worker_status)
 
     # game loop
     running: bool = True
@@ -36,7 +38,8 @@ def main():
                 running = False
 
         # check if game over
-        over_check, over_reason = game.update(py.key.get_pressed())
+        over_check, reason, worker_status = game.update(py.key.get_pressed(), worker_status)
+
         if not over_check:
             over = True
             inputted = False
@@ -46,7 +49,7 @@ def main():
             # display game over screen
             while over:
                 while anim_over:
-                    game.game_over_anim(anim, over_reason)
+                    game.game_over_anim(anim, reason)
                     if anim == 20:
                         anim_over = False
                     anim += 1
@@ -73,14 +76,26 @@ def main():
 
                 #display game over info
                 game.screen.fill((255,255,255))
-                overtext = my_font.render('Game Over! You ate {apples} apples!'.format(apples=game.score), 1, (0,0,0))
+                if reason == 'wall':
+                    deathtext = my_font.render('Game Over! You crashed into a wall!', 1, (0,0,0))
+                    game.screen.blit(deathtext, (game.SCREEN_WIDTH // 10, game.SCREEN_HEIGHT // 3.5))
+
+                elif reason == 'self':
+                    deathtext = my_font.render('Game Over! You crashed into yourself!', 1, (0,0,0))
+                    game.screen.blit(deathtext, (game.SCREEN_WIDTH // 11, game.SCREEN_HEIGHT // 3.5))
+
+                elif reason == 'hole':
+                    deathtext = my_font.render('Game Over! You fell into a hole!', 1, (0,0,0))
+                    game.screen.blit(deathtext, (game.SCREEN_WIDTH // 7, game.SCREEN_HEIGHT // 3.5))
+
+                overtext = my_font.render('You ate {apples} apples!'.format(apples=game.score), 1, (0,0,0))
                 rstext = my_font.render('To restart, press R', 1, (0,0,0))
                 if greater:
                     hstext = my_font.render('You got a new highscore of {score}!'.format(score=game.score), 1, (0,0,0))
                     game.screen.blit(hstext, (game.SCREEN_WIDTH // 5.5, game.SCREEN_HEIGHT // 2))
 
-                game.screen.blit(overtext, (game.SCREEN_WIDTH // 6, game.SCREEN_HEIGHT // 3))
-                game.screen.blit(rstext, (game.SCREEN_WIDTH // 4, game.SCREEN_HEIGHT//2.5))
+                game.screen.blit(overtext, (game.SCREEN_WIDTH // 3, game.SCREEN_HEIGHT // 2.9))
+                game.screen.blit(rstext, (game.SCREEN_WIDTH // 3.3, game.SCREEN_HEIGHT//2.5))
 
                 # check for game events
                 for event in py.event.get():
@@ -92,13 +107,39 @@ def main():
                         if event.key == py.K_r:
                             over = False
                             del game
-                            game = Game()
+                            worker_status = False
+                            game = Game(worker_status)
 
                         if event.key == py.K_ESCAPE:
                             py.quit()
                             quit()
 
                 py.display.update()
+
+
+        elif reason == 'bomb':
+            i = 0
+            while i < 3:
+                if i == 0:
+                    game.screen.fill((255, 255, 0))
+
+                elif i == 1:
+                    game.screen.fill((255, 165, 0))
+
+                else:
+                    game.screen.fill((255, 0, 0))
+
+                py.display.update()
+                i += 1
+
+        elif reason == 'hammer':
+            i = 0
+            while i < 2:
+                game.screen.fill((0, 255, 255))
+
+                py.display.update()
+                i += 1
+
 
         # update display
         scoretext = my_font.render(str(game.score), 1, (0,0,0))
@@ -107,7 +148,7 @@ def main():
         py.display.update()
         
         # speed will increase as apples are eaten
-        clock.tick(int(game.speed // 1))
+        clock.tick(game.speed)
 
    # close pygame
     py.quit()
