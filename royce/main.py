@@ -119,11 +119,11 @@ def main():
 
         elif reason == 'bomb':
             i = 0
-            while i < 3:
-                if i == 0:
+            while i < 16:
+                if 0 <= i<= 5:
                     game.screen.fill((255, 255, 0))
 
-                elif i == 1:
+                elif 6 <= i <= 10:
                     game.screen.fill((255, 165, 0))
 
                 else:
@@ -133,12 +133,14 @@ def main():
                 i += 1
 
         elif reason == 'hammer':
-            i = 0
-            while i < 2:
-                game.screen.fill((0, 255, 255))
-
+            for x in range(2):
+                game.screen.fill((0, 255, 128))
                 py.display.update()
-                i += 1
+
+        elif reason == 'repair':
+            for x in range(2):
+                game.screen.fill((0, 255, 255))
+                py.display.update()
 
 
         # update display

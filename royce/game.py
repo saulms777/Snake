@@ -195,7 +195,7 @@ class Game(Constants):
                         self.hammer = Hammer()
                         self.hammer_coords = self.hammer.generate_hammer(self.snake, self.hole_coords, [self.portal_b_coords, self.portal_b_coords], self.apple_coords, self.bomb_coords)
 
-                    return True, 'hammer', False
+                    return True, 'repair', False
 
         # if a snake hit a bomb, generate x holes and delete the bomb, run bomb animation by returning 'bomb'
         if new_position == self.bomb_coords:
@@ -208,14 +208,14 @@ class Game(Constants):
             
             self.bomb_coords = self.bomb.generate_bomb(self.snake, self.hole_coords, [self.portal_o_coords, self.portal_b_coords], self.apple_coords, self.hammer_coords)
 
-            if self.hammer == None:
+            if self.hammer == None and not self.worker:
                 self.hammer = Hammer()
                 self.hammer_coords = self.hammer.generate_hammer(self.snake, self.hole_coords, [self.portal_b_coords, self.portal_b_coords], self.apple_coords, self.bomb_coords)
 
             return True, 'bomb', self.worker
 
         elif new_position == self.hammer_coords:
-            del self.hammer
+            self.hammer = None
             self.hammer_coords = [-500, -500]
 
             return True, 'hammer', True
