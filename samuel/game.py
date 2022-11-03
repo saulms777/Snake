@@ -22,6 +22,9 @@ class Game(Constants):
         # create screen object
         self.screen = py.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
 
+        # set font
+        self.text = py.font.SysFont("calibri", 48, bold=True)
+
         # create background objects
         self.border = py.Surface((self.SIZE, self.SIZE))
         self.border.fill(self.BORDER_GREEN)
@@ -64,20 +67,14 @@ class Game(Constants):
     # generate new apple coords
     def generate_apple(self) -> list[int, int]:
 
-        # generate x value of apple
+        # generate apple values
         apple_x: int = 0
-        loop = True
-        while loop:
-            apple_x = randrange(self.SIZE, self.SCREEN_WIDTH - self.SIZE, self.SIZE)
-            if apple_x not in [el[0] for el in self.snake]:
-                loop = False
-
-        # generate y value of apple
         apple_y: int = 0
         loop = True
         while loop:
+            apple_x = randrange(self.SIZE, self.SCREEN_WIDTH - self.SIZE, self.SIZE)
             apple_y = randrange(self.TITLE_HEIGHT + self.SIZE, self.SCREEN_HEIGHT - self.SIZE, self.SIZE)
-            if apple_y not in [el[1] for el in self.snake]:
+            if (apple_x, apple_y) not in [el for el in self.snake]:
                 loop = False
 
         return [apple_x, apple_y]
@@ -174,3 +171,12 @@ class Game(Constants):
         end_screen = py.Surface.convert_alpha(py.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT)))
         end_screen.fill(self.DARKEN)
         self.screen.blit(end_screen, (0, 0))
+
+        # end screen
+        points_text = f"Apples: {self.points}"
+        play_again = "Press esc to play again"
+        points_x = (self.SCREEN_WIDTH - self.text.size(points_text)[0]) / 2
+        play_again_x = (self.SCREEN_WIDTH - self.text.size(play_again)[0]) / 2
+
+        self.screen.blit(self.text.render(points_text, True, self.BLACK), (points_x, 350))
+        self.screen.blit(self.text.render(play_again, True, self.BLACK), (play_again_x, 450))
