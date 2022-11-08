@@ -1,15 +1,5 @@
 # imports
 import pygame as py
-from pygame.locals import (
-    K_w,
-    K_s,
-    K_a,
-    K_d,
-    K_UP,
-    K_DOWN,
-    K_LEFT,
-    K_RIGHT,
-)
 from random import randrange
 from constants import Constants
 
@@ -19,44 +9,35 @@ class Game(Constants):
     # initialize
     def __init__(self) -> None:
 
-        # create screen object
-        self.screen = py.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        # set screen and background
+        self.screen = py.display.set_mode((600, 800))
+        self.game_bg = py.image.load("images/game_bg.png").convert()
 
         # set font
-        self.text = py.font.SysFont("calibri", 48, bold=True)
-
-        # create background objects
-        self.border = py.Surface((self.SIZE, self.SIZE))
-        self.border.fill(self.BORDER_GREEN)
-        self.light = py.Surface((self.SIZE, self.SIZE))
-        self.light.fill(self.LIGHT_GREEN)
-        self.dark = py.Surface((self.SIZE, self.SIZE))
-        self.dark.fill(self.DARK_GREEN)
+        self.text = py.font.SysFont("calibri", 24, bold=True)
 
         # set snake default position
-        middle_x: int = int(self.SCREEN_WIDTH / self.SIZE // 2) * self.SIZE
-        middle_y: int = self.TITLE_HEIGHT + int((self.SCREEN_HEIGHT - self.TITLE_HEIGHT) / self.SIZE // 2) * self.SIZE
         self.snake: list[list[int, int]] = [
-            [middle_x + 2 * self.SIZE, middle_y],
-            [middle_x + self.SIZE, middle_y],
-            [middle_x, middle_y],
-            [middle_x - self.SIZE, middle_y],
-            [middle_x - 2 * self.SIZE, middle_y]
+            [350, 450],
+            [325, 450],
+            [300, 450],
+            [275, 450],
+            [250, 450]
         ]
 
         # create snake objects
-        self.head = py.Surface((self.SIZE, self.SIZE))
+        self.head = py.Surface((25, 25))
         self.head.fill(self.HEAD_BLUE)
-        self.segment = py.Surface((self.SIZE, self.SIZE))
+        self.segment = py.Surface((25, 25))
         self.segment.fill(self.BODY_BLUE)
 
-        # create apple object
+        # create apple objects
         self.apple_coords: list[int, int] = self.generate_apple()
-        self.apple = py.Surface((self.SIZE, self.SIZE))
-        self.apple.fill(self.APPLE_RED)
+        self.apple_dark = py.image.load("images/apple_dark.png").convert()
+        self.apple_light = py.image.load("images/apple_light.png").convert()
 
         # set default direction
-        self.direction: tuple[int, int] = (self.SIZE, 0)
+        self.direction: tuple[int, int] = (25, 0)
 
         # points
         self.points: int = 0
@@ -72,9 +53,9 @@ class Game(Constants):
         apple_y: int = 0
         loop = True
         while loop:
-            apple_x = randrange(self.SIZE, self.SCREEN_WIDTH - self.SIZE, self.SIZE)
-            apple_y = randrange(self.TITLE_HEIGHT + self.SIZE, self.SCREEN_HEIGHT - self.SIZE, self.SIZE)
-            if (apple_x, apple_y) not in [el for el in self.snake]:
+            apple_x = randrange(25, 575, 25)
+            apple_y = randrange(125, 775, 25)
+            if [apple_x, apple_y] not in [el for el in self.snake]:
                 loop = False
 
         return [apple_x, apple_y]
@@ -86,8 +67,8 @@ class Game(Constants):
         if head_coords not in self.snake:
 
             # check if hit a wall
-            if self.SIZE <= head_coords[0] <= self.SCREEN_WIDTH - 2 * self.SIZE \
-                    and self.TITLE_HEIGHT + self.SIZE <= head_coords[1] <= self.SCREEN_HEIGHT - 2 * self.SIZE:
+            if 25 <= head_coords[0] <= 550 \
+                    and 125 <= head_coords[1] <= 750:
                 return False
 
         return True
@@ -95,26 +76,14 @@ class Game(Constants):
     # update display
     def update_screen(self, pressed_keys) -> None:
 
-        # keys and directions
-        key_directions: dict[int, tuple[int, int]] = {
-            K_w: (0, -self.SIZE),
-            K_s: (0, self.SIZE),
-            K_a: (-self.SIZE, 0),
-            K_d: (self.SIZE, 0),
-            K_UP: (0, -self.SIZE),
-            K_DOWN: (0, self.SIZE),
-            K_LEFT: (-self.SIZE, 0),
-            K_RIGHT: (self.SIZE, 0)
-        }
-
         # change direction if key pressed
-        for key, instruction in key_directions.items():
+        for key, instruction in self.KEY_DIRECTIONS.items():
             if pressed_keys[key]:
 
                 # check if input is not opposite direction
                 if not (abs(instruction[0]) == abs(self.direction[0])
                         or abs(instruction[1]) == abs(self.direction[1])):
-                    self.direction = key_directions[key]
+                    self.direction = self.KEY_DIRECTIONS[key]
 
         # check for game end
         new_position: list[int, int] = [self.snake[0][0] + self.direction[0],
@@ -124,59 +93,36 @@ class Game(Constants):
             return
 
         # draw background
-        self.screen.fill(self.WHITE)
-
-        # draw border
-        game_height: int = int((self.SCREEN_HEIGHT - self.TITLE_HEIGHT) / self.SIZE)
-        game_width: int = int(self.SCREEN_WIDTH / self.SIZE)
-        for column in range(game_height):
-            for row in range(game_width):
-                if row in (0, game_width - 1) or column in (0, game_height - 1):
-                    self.screen.blit(self.border, (self.SIZE * row, self.TITLE_HEIGHT + self.SIZE * column))
-
-        # draw checkerboard pattern
-        for column in range(game_height - 2):
-            for row in range(game_width - 2):
-                if (row + column) % 2 == 0:
-                    self.screen.blit(self.dark,
-                                     (self.SIZE + self.SIZE * row,
-                                      self.TITLE_HEIGHT + self.SIZE + self.SIZE * column))
-                else:
-                    self.screen.blit(self.light,
-                                     (self.SIZE + self.SIZE * row,
-                                      self.TITLE_HEIGHT + self.SIZE + self.SIZE * column))
-
-        # draw snake head
-        self.snake.insert(0, new_position)
-        self.screen.blit(self.head, self.snake[0])
+        self.screen.blit(self.game_bg, (0, 100))
 
         # check if apple was eaten
+        self.snake.insert(0, new_position)
         if new_position == self.apple_coords:
             self.apple_coords = self.generate_apple()
             self.points += 1
         else:
             self.snake.pop()
 
-        # draw body segments
+        # draw snake
+        self.screen.blit(self.head, self.snake[0])
         for segment in self.snake[1:]:
             self.screen.blit(self.segment, segment)
 
         # draw apple
-        self.screen.blit(self.apple, self.apple_coords)
+        if sum(self.apple_coords) % 50 == 0:
+            self.screen.blit(self.apple_dark, self.apple_coords)
+        else:
+            self.screen.blit(self.apple_light, self.apple_coords)
 
     # end screen
     def draw_end_screen(self) -> None:
 
         # darken screen
-        end_screen = py.Surface.convert_alpha(py.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT)))
-        end_screen.fill(self.DARKEN)
-        self.screen.blit(end_screen, (0, 0))
+        end_screen = py.image.load("images/ending_bg.png").convert()
+        self.screen.blit(end_screen, (0, 100))
 
         # end screen
-        points_text = f"Apples: {self.points}"
-        play_again = "Press esc to play again"
-        points_x = (self.SCREEN_WIDTH - self.text.size(points_text)[0]) / 2
-        play_again_x = (self.SCREEN_WIDTH - self.text.size(play_again)[0]) / 2
-
-        self.screen.blit(self.text.render(points_text, True, self.BLACK), (points_x, 350))
-        self.screen.blit(self.text.render(play_again, True, self.BLACK), (play_again_x, 450))
+        self.screen.blit(self.apple_dark, (275, 400))
+        self.screen.blit(self.text.render(f"{self.points}", True, self.BLACK), (305, 403))
+        self.screen.blit(self.text.render("Press esc to", True, self.BLACK), (242, 475))
+        self.screen.blit(self.text.render("play again", True, self.BLACK), (250, 500))
