@@ -51,11 +51,10 @@ class Game(Constants):
                                                       K_RIGHT: (25, 0)}
 
         # check if key pressed
-        for key, instruction in KEY_DIRECTIONS.items():
+        for key, direction in KEY_DIRECTIONS.items():
             if pressed_keys[key]:
 
                 # prevents snake from self-destructing
-                direction = KEY_DIRECTIONS[key]
                 if self.snake[1] != [self.snake[0][0] + direction[0], self.snake[0][1] + direction[1]]:
                     self.direction = direction
 
