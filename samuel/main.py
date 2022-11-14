@@ -68,6 +68,7 @@ def main():
 
             # draw on-screen objects
             game.draw_bg()
+            game.start_text()
             game.draw_snake()
             game.draw_apple()
 

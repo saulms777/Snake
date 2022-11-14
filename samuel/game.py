@@ -19,11 +19,11 @@ class Game(Constants):
         self.text = py.font.SysFont("calibri", 24, bold=True)
 
         # set snake default position
-        self.snake: list[list[int, int]] = [[350, 425],
-                                            [325, 425],
-                                            [300, 425],
-                                            [275, 425],
-                                            [250, 425]]
+        self.snake: list[list[int, int]] = [[275, 425],
+                                            [250, 425],
+                                            [225, 425],
+                                            [200, 425],
+                                            [175, 425]]
 
         # create snake objects
         self.head = py.Surface((25, 25))
@@ -32,7 +32,7 @@ class Game(Constants):
         self.segment.fill(self.BODY_BLUE)
 
         # create apple objects
-        self.apple_coords: list[int, int] = self.generate_apple()
+        self.apple_coords: list[int, int] = [400, 425]
         self.apple_dark = py.image.load("images/apple_dark.png").convert()
         self.apple_light = py.image.load("images/apple_light.png").convert()
 
@@ -95,6 +95,11 @@ class Game(Constants):
         self.screen.blit(self.game_bg, (0, 0))
         self.screen.blit(self.apple_points, (25, 25))
         self.screen.blit(self.text.render(f"{self.points}", True, self.BLACK), (55, 27))
+
+    # show start text
+    def start_text(self) -> None:
+
+        self.screen.blit(self.text.render("Press right arrow to start", True, self.BLACK), (175, 367))
 
     # update snake list
     def update_snake(self) -> None:
