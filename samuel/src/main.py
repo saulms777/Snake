@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # imports
 import pygame as py
 from pygame.locals import K_RIGHT, K_ESCAPE, KEYDOWN
@@ -5,7 +7,7 @@ from game import Game
 
 
 # game code
-def main():
+def main() -> None:
 
     # initalize pygame
     py.init()

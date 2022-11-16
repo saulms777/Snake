@@ -10,20 +10,18 @@ class Game(Constants):
     # initialize
     def __init__(self) -> None:
 
-        # set screen and background
+        # initalize game objects and background
         self.screen = py.display.set_mode((600, 800))
         self.game_bg = py.image.load("images/game_bg.png").convert()
         self.apple_points = py.image.load("images/apple_points.png").convert()
-
-        # set font
         self.text = py.font.SysFont("calibri", 24, bold=True)
 
         # set snake default position
-        self.snake: list[list[int, int]] = [[275, 425],
-                                            [250, 425],
-                                            [225, 425],
-                                            [200, 425],
-                                            [175, 425]]
+        self.snake: list[list] = [[275, 425],
+                                  [250, 425],
+                                  [225, 425],
+                                  [200, 425],
+                                  [175, 425]]
 
         # create snake objects
         self.head = py.Surface((25, 25))
@@ -32,13 +30,13 @@ class Game(Constants):
         self.segment.fill(self.BODY_BLUE)
 
         # create apple objects
-        self.apple_coords: list[int, int] = [400, 425]
+        self.apple_coords: list = [400, 425]
         self.apple_dark = py.image.load("images/apple_dark.png").convert()
         self.apple_light = py.image.load("images/apple_light.png").convert()
 
         # other variables
-        self.direction: tuple[int, int] = (25, 0)
-        self.new_position: list[int, int] = []
+        self.direction: tuple = (25, 0)
+        self.new_position: list = []
         self.points: int = 0
         self.game_over: bool = False
 
@@ -46,10 +44,10 @@ class Game(Constants):
     def change_direction(self, pressed_keys) -> None:
 
         # directions for each key
-        KEY_DIRECTIONS: dict[int, tuple[int, int]] = {K_UP: (0, -25),
-                                                      K_DOWN: (0, 25),
-                                                      K_LEFT: (-25, 0),
-                                                      K_RIGHT: (25, 0)}
+        KEY_DIRECTIONS: dict[int, tuple] = {K_UP: (0, -25),
+                                            K_DOWN: (0, 25),
+                                            K_LEFT: (-25, 0),
+                                            K_RIGHT: (25, 0)}
 
         # check if key pressed
         for key, direction in KEY_DIRECTIONS.items():
@@ -75,7 +73,7 @@ class Game(Constants):
         self.game_over = True
 
     # generate new apple coords
-    def generate_apple(self) -> list[int, int]:
+    def generate_apple(self) -> list:
 
         # generate apple coords
         apple_x: int = 0
